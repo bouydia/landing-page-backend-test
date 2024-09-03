@@ -101,17 +101,18 @@ module.exports.createAdmin = asyncHandler(async (req, res) => {
  *---------------------------------*/
 module.exports.deleteAdmin = asyncHandler(async (req, res) => {
   const { id } = req.params
+
   const currentAdminId = req.admin.id // Assuming req.user.id contains the ID of the authenticated admin
- if (!id) {
-   return res.status(400).json({ message: 'ID parameter is required' })
- }
-  
+  if (!id) {
+    return res.status(400).json({ message: 'ID parameter is required' })
+  }
+
   if (id === currentAdminId) {
     return res
       .status(403)
       .json({ message: 'You cannot delete your own account' })
   }
-   
+
   let admin = await Admin.findById(id)
 
   if (!admin) {
@@ -163,7 +164,8 @@ module.exports.requestPasswordReset = asyncHandler(async (req, res) => {
  * @access public
  *---------------------------------*/
 module.exports.resetPassword = asyncHandler(async (req, res) => {
-  const { token, newPassword } = req.body
+  const { newPassword } = req.body
+  const { token } = req.query
 
   const admin = await Admin.findOne({
     resetToken: token,
