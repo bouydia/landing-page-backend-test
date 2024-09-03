@@ -9,6 +9,7 @@ const {
   updatePassword,
   getAllAdmins,
   updateAdmin,
+  getAdminDetails,
 } = require('../controllers/adminController')
 const {
   verifyToken,
@@ -22,6 +23,7 @@ router
   .get(verifyToken, getAllAdmins)
 router
   .route('/:id')
+  .get(verifyToken, getAdminDetails)
   .delete(verifyToken, verifyTokenAndSuperAdmin, deleteAdmin)
   .put(verifyToken, verifyTokenAndSuperAdmin, updateAdmin)
 

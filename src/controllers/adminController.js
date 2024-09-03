@@ -263,3 +263,18 @@ module.exports.updateAdmin = asyncHandler(async (req, res) => {
   const updqtedAdmin = await Admin.findByIdAndUpdate(id, update)
   res.status(200).json({ message: 'Admin updated successfully' })
 })
+
+/**-------------------------------
+ * @desc get admin detail
+ * @route /api/v1/admin/:id
+ * @method GET
+ * @access private
+ *---------------------------------*/
+module.exports.getAdminDetails = asyncHandler(async (req, res) => {
+  const { id } = req.params
+  const admin = await Admin.findById(id).select('-password')
+  if (!admin) {
+    res.status(404).json({ message: "Admin with this does'nt exist" })
+  }
+  res.status(201).json(admin)
+})
