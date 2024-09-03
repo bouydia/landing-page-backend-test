@@ -52,8 +52,34 @@ const sendEmailToLeads = async (emails, from, subject, html) => {
   }
 }
 
+//send email to leads
+const sendEmailToLeadAfterSubscribe = async (email,name) => {
+  const mailOptions = {
+    from: 'younessbouydia@gmail.com',
+    to: email,
+    subject: 'Thank You for Joining Our Waitlist!',
+    html: `
+    <p>Dear ${name},</p>
+    <p>Thank you for joining our waitlist. We're excited to have you on board!</p>
+    <p>We'll keep you updated with the latest news and let you know as soon as we launch.</p>
+    <p>If you have any questions or need further assistance, feel free to reply to this email.</p>
+    <p>Best regards,</p>
+    <p>The Team</p>
+  `,
+  }
+
+  try {
+    await transporter.sendMail(mailOptions)
+  } catch (error) {
+    console.error('Error sending password reset email:', error)
+    throw new Error('Failed to send  email to lead')
+  }
+}
+
+
 module.exports = {
   sendResetPasswordEmail,
   transporter,
   sendEmailToLeads,
+  sendEmailToLeadAfterSubscribe,
 }
