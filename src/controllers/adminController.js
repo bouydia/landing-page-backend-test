@@ -63,13 +63,17 @@ module.exports.createAdmin = asyncHandler(async (req, res) => {
   const { email } = req.body
 
   const error = validateCreateAdmin(req.body)
-  if (error) return res.status(400).json({ message: error.details[0].message })
+  if (error)
+    return res
+      .status(400)
+      .json({ statusCode: 400, message: error.details[0].message })
 
   const existingAdmin = await Admin.findOne({ email })
   if (existingAdmin) {
-    return res
-      .status(400)
-      .json({ message: 'An admin with this email already exists' })
+    return res.status(400).json({
+      statusCode: 400,
+      message: 'An admin with this email already exists',
+    })
   }
   const password = bcrypt.hashSync(process.env.PASSWORD, 10)
   const newAdmin = new Admin({ email, password })
@@ -86,8 +90,11 @@ module.exports.createAdmin = asyncHandler(async (req, res) => {
   await sendResetPasswordEmail(savedAdmin.email, resetToken)
 
   res.status(201).json({
-    id: savedAdmin._id,
-    email: savedAdmin.email,
+    statusCode: 200,
+    response: {
+      _id: savedAdmin._id,
+      email: savedAdmin.email,
+    },
     message:
       'Admin created successfully. A set password link has been sent to their email.',
   })
@@ -104,7 +111,9 @@ module.exports.deleteAdmin = asyncHandler(async (req, res) => {
 
   const currentAdminId = req.admin.id // Assuming req.user.id contains the ID of the authenticated admin
   if (!id) {
-    return res.status(400).json({ statusCode:400,message: 'ID parameter is required' })
+    return res
+      .status(400)
+      .json({ statusCode: 400, message: 'ID parameter is required' })
   }
 
   if (id === currentAdminId) {
@@ -124,7 +133,11 @@ module.exports.deleteAdmin = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json({ statusCode: 200,response:{_id:admin.id}, message: 'Admin deleted successfully' })
+    .json({
+      statusCode: 200,
+      response: { _id: admin.id },
+      message: 'Admin deleted successfully',
+    })
 })
 
 /**-------------------------------
