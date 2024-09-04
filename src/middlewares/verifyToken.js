@@ -9,15 +9,11 @@ function verifyToken(req, res, next) {
       req.admin = decodedPayload
       next()
     } catch (error) {
-      return res
-        .status(401)
-        .json({ statusCode: 401, message: 'invalide token,access denied' })
+      return res.status(401).json({ message: 'invalide token,access denied' })
     }
   } else {
     // 401 Unautorize
-    return res
-      .status(401)
-      .json({ statusCode: 400, message: 'no token provided,access denied' })
+    return res.status(401).json({ message: 'no token provided,access denied' })
   }
 }
 
@@ -27,9 +23,7 @@ function verifyTokenAndSuperAdmin(req, res, next) {
     const { role } = req.admin
     if (role === "moderator") {
       // 403 forbidden
-      return res
-        .status(403)
-        .json({ statusCode: 403, message: 'not allowed,only super admin' })
+      return res.status(403).json({ message: 'not allowed,only super admin' })
     }
     next()
   })

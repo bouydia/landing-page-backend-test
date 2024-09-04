@@ -18,7 +18,6 @@ const {
   transporter,
   sendEmailToLeads,
 } = require('../utils/sendEmail')
-const { response } = require('express')
 require('dotenv').config()
 
 /**-------------------------------
@@ -33,9 +32,7 @@ module.exports.loginAdmin = asyncHandler(async (req, res) => {
 
   const admin = await Admin.findOne({ email: req.body.email })
   if (!admin) {
-    return res
-      .status(404)
-      .json({ statusCode: 404, message: "this email dosen't exist" })
+    return res.status(400).json({ message: "this email dosen't exist" })
   }
 
   const isPasswordMatch = await bcrypt.compare(
@@ -43,22 +40,16 @@ module.exports.loginAdmin = asyncHandler(async (req, res) => {
     admin.password
   )
   if (!isPasswordMatch) {
-    return res
-      .status(400)
-      .json({ statusCode: 400, message: 'incorrect password' })
+    return res.status(400).json({ message: 'incorrect password' })
   }
 
   const token = await generateToken(admin.id, admin.email, admin.role)
   console.log(admin.id, admin.email, admin.role)
 
   return res.status(201).json({
-    statusCode: 201,
-    response: {
-      _id: admin._id,
-      email: admin.email,
-      token,
-    },
-    message: 'login succssefuly',
+    id: admin._id,
+    email: admin.email,
+    token,
   })
 })
 
@@ -72,17 +63,13 @@ module.exports.createAdmin = asyncHandler(async (req, res) => {
   const { email } = req.body
 
   const error = validateCreateAdmin(req.body)
-  if (error)
-    return res
-      .status(400)
-      .json({ statusCode: 400, message: error.details[0].message })
+  if (error) return res.status(400).json({ message: error.details[0].message })
 
   const existingAdmin = await Admin.findOne({ email })
   if (existingAdmin) {
-    return res.status(400).json({
-      statusCode: 400,
-      message: 'An admin with this email already exists',
-    })
+    return res
+      .status(400)
+      .json({ message: 'An admin with this email already exists' })
   }
   const password = bcrypt.hashSync(process.env.PASSWORD, 10)
   const newAdmin = new Admin({ email, password })
@@ -99,11 +86,8 @@ module.exports.createAdmin = asyncHandler(async (req, res) => {
   await sendResetPasswordEmail(savedAdmin.email, resetToken)
 
   res.status(201).json({
-    statusCode: 201,
-    response: {
-      _id: savedAdmin._id,
-      email: savedAdmin.email,
-    },
+    id: savedAdmin._id,
+    email: savedAdmin.email,
     message:
       'Admin created successfully. A set password link has been sent to their email.',
   })
@@ -120,33 +104,23 @@ module.exports.deleteAdmin = asyncHandler(async (req, res) => {
 
   const currentAdminId = req.admin.id // Assuming req.user.id contains the ID of the authenticated admin
   if (!id) {
-    return res
-      .status(400)
-      .json({ statusCode: 400, message: 'ID parameter is required' })
+    return res.status(400).json({ message: 'ID parameter is required' })
   }
 
   if (id === currentAdminId) {
     return res
       .status(403)
-      .json({ statusCode: 403, message: 'You cannot delete your own account' })
+      .json({ message: 'You cannot delete your own account' })
   }
 
   let admin = await Admin.findById(id)
 
   if (!admin) {
-    return res
-      .status(400)
-      .json({ statusCode: 400, message: "This admin doesn't exist" })
+    return res.status(400).json({ message: "This admin doesn't exist" })
   }
   await Admin.findByIdAndDelete(admin.id)
 
-  return res
-    .status(200)
-    .json({
-      statusCode: 403,
-      response: { _id: admin.id },
-      message: 'Admin deleted successfully',
-    })
+  return res.status(200).json({ message: 'Admin deleted successfully' })
 })
 
 /**-------------------------------
@@ -161,7 +135,7 @@ module.exports.requestPasswordReset = asyncHandler(async (req, res) => {
 
   const admin = await Admin.findOne({ email })
   if (!admin) {
-    return res.status(404).json({ statusCode: 404, message: 'Admin not found' })
+    return res.status(404).json({ message: 'Admin not found' })
   }
 
   const resetToken = generateResetToken()
@@ -174,9 +148,7 @@ module.exports.requestPasswordReset = asyncHandler(async (req, res) => {
   try {
     console.log(admin.email)
     await sendResetPasswordEmail(admin.email, resetToken)
-    res
-      .status(200)
-      .json({ statusCode: 200, message: 'Password reset link sent to email' })
+    res.status(200).json({ message: 'Password reset link sent to email' })
   } catch (error) {
     admin.resetToken = undefined
     admin.resetTokenExpiry = undefined
@@ -201,16 +173,12 @@ module.exports.resetPassword = asyncHandler(async (req, res) => {
   })
 
   if (!admin) {
-    return res
-      .status(400)
-      .json({ statusCode: 400, message: 'Invalid or expired reset token' })
+    return res.status(400).json({ message: 'Invalid or expired reset token' })
   }
 
   const { error } = validateNewPassword({ password: newPassword })
   if (error) {
-    return res
-      .status(400)
-      .json({ statusCode: 400, message: error.details[0].message })
+    return res.status(400).json({ message: error.details[0].message })
   }
 
   const salt = await bcrypt.genSalt(10)
@@ -221,9 +189,7 @@ module.exports.resetPassword = asyncHandler(async (req, res) => {
   admin.resetTokenExpiry = undefined
   await admin.save()
 
-  res
-    .status(200)
-    .json({ statusCode: 200, message: 'Password has been reset successfully' })
+  res.status(200).json({ message: 'Password has been reset successfully' })
 })
 
 /**-------------------------------
@@ -247,10 +213,7 @@ module.exports.emailUsrers = asyncHandler(async (req, res) => {
   }
   const { emails, from, subject, html } = value
   await sendEmailToLeads(emails, from, subject, html)
-  res.status(200).json({
-    statusCode: 200,
-    message: `Emails sent to ${emails.length} lead(s)`,
-  })
+  res.status(200).json({ message: `Emails sent to ${emails.length} lead(s)` })
 })
 /**-------------------------------
  * @desc get alla dmins
@@ -274,14 +237,12 @@ module.exports.updatePassword = asyncHandler(async (req, res) => {
 
   const admin = await Admin.findById(adminId)
   if (!admin) {
-    return res.status(404).json({ statusCode: 400, message: 'Admin not found' })
+    return res.status(404).json({ message: 'Admin not found' })
   }
 
   const isMatch = await bcrypt.compare(oldPassword, admin.password)
   if (!isMatch) {
-    return res
-      .status(400)
-      .json({ statusCode: 400, message: 'Incorrect old password' })
+    return res.status(400).json({ message: 'Incorrect old password' })
   }
 
   const salt = await bcrypt.genSalt(10)
@@ -290,9 +251,7 @@ module.exports.updatePassword = asyncHandler(async (req, res) => {
   admin.password = hashedPassword
   await admin.save()
 
-  res
-    .status(200)
-    .json({ statusCode: 200, message: 'Password updated successfully' })
+  res.status(200).json({ message: 'Password updated successfully' })
 })
 /**-------------------------------
  * @desc update admin role
@@ -304,18 +263,12 @@ module.exports.updateAdmin = asyncHandler(async (req, res) => {
   const { id } = req.params
   const { role } = req.body
   if (!role) {
-    res.status(400).json({ statusCode: 400, message: 'role is required' })
+    res.status(400).json({ message: 'role is required' })
   }
   const update = { role: role }
 
   const updqtedAdmin = await Admin.findByIdAndUpdate(id, update)
-  res
-    .status(200)
-    .json({
-      statusCode: 200,
-      response: { updqtedAdmin },
-      message: 'Admin updated successfully',
-    })
+  res.status(200).json({ message: 'Admin updated successfully' })
 })
 
 /**-------------------------------
@@ -328,11 +281,7 @@ module.exports.getAdminDetails = asyncHandler(async (req, res) => {
   const { id } = req.params
   const admin = await Admin.findById(id).select('-password')
   if (!admin) {
-    res
-      .status(404)
-      .json({ statusCode: 404, message: "Admin with this does'nt exist" })
+    res.status(404).json({ message: "Admin with this does'nt exist" })
   }
-  res
-    .status(201)
-    .json({ statusCode: 200, response: admin, message: 'admin details' })
+  res.status(201).json(admin)
 })
