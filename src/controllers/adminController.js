@@ -104,23 +104,27 @@ module.exports.deleteAdmin = asyncHandler(async (req, res) => {
 
   const currentAdminId = req.admin.id // Assuming req.user.id contains the ID of the authenticated admin
   if (!id) {
-    return res.status(400).json({ message: 'ID parameter is required' })
+    return res.status(400).json({ statusCode:400,message: 'ID parameter is required' })
   }
 
   if (id === currentAdminId) {
     return res
       .status(403)
-      .json({ message: 'You cannot delete your own account' })
+      .json({ statusCode: 403, message: 'You cannot delete your own account' })
   }
 
   let admin = await Admin.findById(id)
 
   if (!admin) {
-    return res.status(400).json({ message: "This admin doesn't exist" })
+    return res
+      .status(400)
+      .json({ statusCode: 400, message: "This admin doesn't exist" })
   }
   await Admin.findByIdAndDelete(admin.id)
 
-  return res.status(200).json({ message: 'Admin deleted successfully' })
+  return res
+    .status(200)
+    .json({ statusCode: 200,response:{_id:admin.id}, message: 'Admin deleted successfully' })
 })
 
 /**-------------------------------
